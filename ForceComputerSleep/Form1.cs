@@ -38,11 +38,12 @@ namespace ForceComputerSleep
         private void Tick(object sender, EventArgs e)
         {
             timeLeft = shutDownTime.Subtract(DateTime.Now.Subtract(lastInput));
+            timeLeft = timeLeft.Add(TimeSpan.FromMinutes((int)numericUpDown_Delay.Value));
             if (timeLeft.TotalSeconds <= 0.0)
             {
                 PutComputerToSleep();
             }
-            label1.Text = timeLeft.ToString("hh") + ":" + timeLeft.ToString("mm") + ":" + timeLeft.ToString("ss");
+            label_CountDownTimer.Text = timeLeft.ToString("hh") + ":" + timeLeft.ToString("mm") + ":" + timeLeft.ToString("ss");
         }
 
         private void PutComputerToSleep()
@@ -51,9 +52,14 @@ namespace ForceComputerSleep
             Application.SetSuspendState(PowerState.Suspend, true, true);
         }
 
-        private void Button1_Click(object sender, EventArgs e)
+        private void ForceSleep_Click(object sender, EventArgs e)
         {
             PutComputerToSleep();
+        }
+
+        private void UpdateCountDownTimer(object sender, EventArgs e)
+        {
+
         }
 
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
@@ -70,6 +76,8 @@ namespace ForceComputerSleep
             }
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
         }
+
+
 
         private IntPtr SetHook(LowLevelKeyboardProc proc)
         {
@@ -95,6 +103,6 @@ namespace ForceComputerSleep
 
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
-        
+
     }
 }
