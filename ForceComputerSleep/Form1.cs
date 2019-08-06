@@ -20,17 +20,22 @@ namespace ForceComputerSleep
         private TimeSpan timeLeft = new TimeSpan(0, 30, 0);
         private static Timer timerForUIUpdate = new Timer();
 
-        private static LowLevelKeyboardProc _proc = new LowLevelKeyboardProc(HookCallback);
-        private static IntPtr _hookID = IntPtr.Zero;
+        private static LowLevelProc _procKeyboard = new LowLevelProc(HookCallback);
+        private static LowLevelProc _procMouse = new LowLevelProc(HookCallback);
+        private static IntPtr _hookIDKeyboard = IntPtr.Zero;
+        private static IntPtr _hookIDMouse = IntPtr.Zero;
         private const int WH_KEYBOARD_LL = 13;
+        private const int WH_MOUSE_LL = 14;
         private const int WM_KEYDOWN = 256;
+        private const int WM_MOUSEMOVE = 512;
 
         public Form1()
         {
             InitializeComponent();
 
             shutDownTime = TimeSpan.Parse(ConfigurationManager.AppSettings["ShutDownTime"]);
-            _hookID = SetHook(_proc);
+            _hookIDKeyboard = SetHook(_procKeyboard, WH_KEYBOARD_LL);
+            _hookIDMouse = SetHook(_procMouse, WH_MOUSE_LL);
             timerForUIUpdate.Tick += Tick;
             timerForUIUpdate.Start();
         }
@@ -57,14 +62,10 @@ namespace ForceComputerSleep
             PutComputerToSleep();
         }
 
-        private void UpdateCountDownTimer(object sender, EventArgs e)
-        {
-
-        }
-
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if (nCode >= 0 && wParam == (IntPtr)256)
+            if (nCode >= 0 && (wParam == (IntPtr)WM_KEYDOWN
+                                || wParam == (IntPtr)WM_MOUSEMOVE))
             {
                 Console.WriteLine((object)(Keys)Marshal.ReadInt32(lParam));
                 lastInput = DateTime.Now;
@@ -72,24 +73,24 @@ namespace ForceComputerSleep
                 {
                     timerForUIUpdate.Start();
                 }
-
             }
-            return CallNextHookEx(_hookID, nCode, wParam, lParam);
+
+            return CallNextHookEx(_hookIDKeyboard, nCode, wParam, lParam);
         }
 
 
 
-        private IntPtr SetHook(LowLevelKeyboardProc proc)
+        private IntPtr SetHook(LowLevelProc proc, int constToWatch)
         {
             using (Process currentProcess = Process.GetCurrentProcess())
             {
                 using (ProcessModule mainModule = currentProcess.MainModule)
-                    return SetWindowsHookEx(13, proc, GetModuleHandle(mainModule.ModuleName), 0U);
+                    return SetWindowsHookEx(constToWatch, proc, GetModuleHandle(mainModule.ModuleName), 0U);
             }
         }
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelProc lpfn, IntPtr hMod, uint dwThreadId);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -101,8 +102,7 @@ namespace ForceComputerSleep
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr GetModuleHandle(string lpModuleName);
 
-        private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
-
+        private delegate IntPtr LowLevelProc(int nCode, IntPtr wParam, IntPtr lParam);
 
     }
 }
