@@ -17,8 +17,10 @@ namespace ForceComputerSleep
     {
         private TimeSpan shutDownTime;
         private static DateTime lastInput = DateTime.Now;
+        private DateTime lastSleepSent = DateTime.Now;
         private TimeSpan timeLeft = new TimeSpan(0, 30, 0);
         private static Timer timerForUIUpdate = new Timer();
+        private static Timer timerForRepeatSleep = new Timer();
 
         private static LowLevelProc _procKeyboard = new LowLevelProc(HookCallback);
         private static LowLevelProc _procMouse = new LowLevelProc(HookCallback);
@@ -38,6 +40,15 @@ namespace ForceComputerSleep
             _hookIDMouse = SetHook(_procMouse, WH_MOUSE_LL);
             timerForUIUpdate.Tick += Tick;
             timerForUIUpdate.Start();
+            timerForRepeatSleep.Tick += RepeatSleep;
+        }
+
+        private void RepeatSleep(object sender, EventArgs e)
+        {
+            if (DateTime.Now.Subtract(lastSleepSent).TotalMinutes >= 5)
+            {
+                PutComputerToSleep();
+            }
         }
 
         private void Tick(object sender, EventArgs e)
@@ -53,7 +64,9 @@ namespace ForceComputerSleep
 
         private void PutComputerToSleep()
         {
+            lastSleepSent = DateTime.Now;
             timerForUIUpdate.Stop();
+            timerForRepeatSleep.Start();
             Application.SetSuspendState(PowerState.Suspend, true, true);
         }
 
@@ -69,6 +82,12 @@ namespace ForceComputerSleep
             {
                 Console.WriteLine((object)(Keys)Marshal.ReadInt32(lParam));
                 lastInput = DateTime.Now;
+
+                if (timerForRepeatSleep.Enabled)
+                {
+                    timerForRepeatSleep.Stop();
+                }
+
                 if (!timerForUIUpdate.Enabled)
                 {
                     timerForUIUpdate.Start();
