@@ -46,6 +46,7 @@ namespace ForceComputerSleep
         private void RepeatSleep(object sender, EventArgs e)
         {
             if (DateTime.Now.Minute % 5 == 0
+                && DateTime.Now.Second == 0
                 && DateTime.Now.Subtract(lastSleepSent).TotalMinutes >= 5)
             {
                 PutComputerToSleep();
