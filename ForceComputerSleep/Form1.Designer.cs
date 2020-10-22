@@ -28,11 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.label_CountDownTimer = new System.Windows.Forms.Label();
             this.button_ForceSleep = new System.Windows.Forms.Button();
             this.numericUpDown_Delay = new System.Windows.Forms.NumericUpDown();
             this.label_Delay = new System.Windows.Forms.Label();
+            this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_Delay)).BeginInit();
             this.SuspendLayout();
             // 
@@ -83,6 +85,13 @@
             this.label_Delay.TabIndex = 3;
             this.label_Delay.Text = "Delay";
             // 
+            // notifyIcon1
+            // 
+            this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
+            this.notifyIcon1.Text = "ForceComputerSleep";
+            this.notifyIcon1.Visible = true;
+            this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -95,6 +104,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "Force Computer To Sleep";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_Delay)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -107,6 +117,7 @@
         private System.Windows.Forms.Button button_ForceSleep;
         private System.Windows.Forms.NumericUpDown numericUpDown_Delay;
         private System.Windows.Forms.Label label_Delay;
+        private System.Windows.Forms.NotifyIcon notifyIcon1;
     }
 }
 

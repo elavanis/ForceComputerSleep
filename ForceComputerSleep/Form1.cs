@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SharpDX.DirectInput;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
@@ -31,6 +32,9 @@ namespace ForceComputerSleep
         private const int WM_KEYDOWN = 256;
         private const int WM_MOUSEMOVE = 512;
 
+
+        List<Joystick> joysticks;
+
         public Form1()
         {
             InitializeComponent();
@@ -38,9 +42,42 @@ namespace ForceComputerSleep
             shutDownTime = TimeSpan.Parse(ConfigurationManager.AppSettings["ShutDownTime"]);
             _hookIDKeyboard = SetHook(_procKeyboard, WH_KEYBOARD_LL);
             _hookIDMouse = SetHook(_procMouse, WH_MOUSE_LL);
+
+            joysticks = BuildJoystickList();
+
             timerForUIUpdate.Tick += Tick;
             timerForUIUpdate.Start();
             timerForRepeatSleep.Tick += RepeatSleep;
+        }
+
+        private List<Joystick> BuildJoystickList()
+        {
+            List<Guid> guids = new List<Guid>();
+
+            // Initialize DirectInput
+            var directInput = new DirectInput();
+
+            foreach (var deviceInstance in directInput.GetDevices(DeviceType.Gamepad, DeviceEnumerationFlags.AllDevices))
+            {
+                guids.Add(deviceInstance.InstanceGuid);
+            }
+
+            foreach (var deviceInstance in directInput.GetDevices(DeviceType.Joystick, DeviceEnumerationFlags.AllDevices))
+            {
+                guids.Add(deviceInstance.InstanceGuid);
+            }
+
+            List<Joystick> joysticks = new List<Joystick>();
+
+            foreach (var item in guids)
+            {
+                Joystick joystick = new Joystick(directInput, item);
+                joystick.Properties.BufferSize = 128;
+                joystick.Acquire();
+                joysticks.Add(joystick);
+            }
+
+            return joysticks;
         }
 
         private void RepeatSleep(object sender, EventArgs e)
@@ -55,6 +92,8 @@ namespace ForceComputerSleep
 
         private void Tick(object sender, EventArgs e)
         {
+            CheckJoysticks();
+
             timeLeft = shutDownTime.Subtract(DateTime.Now.Subtract(lastInput));
             timeLeft = timeLeft.Add(TimeSpan.FromMinutes((int)numericUpDown_Delay.Value));
             if (timeLeft.TotalSeconds <= 0.0)
@@ -62,6 +101,20 @@ namespace ForceComputerSleep
                 PutComputerToSleep();
             }
             label_CountDownTimer.Text = timeLeft.ToString("hh") + ":" + timeLeft.ToString("mm") + ":" + timeLeft.ToString("ss");
+        }
+
+        private void CheckJoysticks()
+        {
+            foreach (var joystick in joysticks)
+            {
+                joystick.Poll();
+                var datas = joystick.GetBufferedData();
+                foreach (var state in datas)
+                {
+                    lastInput = DateTime.Now;
+                    break;
+                }
+            }
         }
 
         private void PutComputerToSleep()
@@ -125,5 +178,18 @@ namespace ForceComputerSleep
 
         private delegate IntPtr LowLevelProc(int nCode, IntPtr wParam, IntPtr lParam);
 
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                Hide();
+                e.Cancel = true;
+            }
+        }
+
+        private void notifyIcon1_DoubleClick(object sender, EventArgs e)
+        {
+            Show();
+        }
     }
 }
