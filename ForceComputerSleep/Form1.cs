@@ -92,7 +92,14 @@ namespace ForceComputerSleep
 
         private void Tick(object sender, EventArgs e)
         {
-            CheckJoysticks();
+            try
+            {
+                CheckJoysticks();
+            }
+            catch
+            {
+                BuildJoystickList();
+            }
 
             timeLeft = shutDownTime.Subtract(DateTime.Now.Subtract(lastInput));
             timeLeft = timeLeft.Add(TimeSpan.FromMinutes((int)numericUpDown_Delay.Value));
