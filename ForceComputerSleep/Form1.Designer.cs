@@ -35,7 +35,10 @@
             this.numericUpDown_Delay = new System.Windows.Forms.NumericUpDown();
             this.label_Delay = new System.Windows.Forms.Label();
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
+            this.contextMenuStrip_NotifyIcon = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_Delay)).BeginInit();
+            this.contextMenuStrip_NotifyIcon.SuspendLayout();
             this.SuspendLayout();
             // 
             // label_CountDownTimer
@@ -87,10 +90,25 @@
             // 
             // notifyIcon1
             // 
+            this.notifyIcon1.ContextMenuStrip = this.contextMenuStrip_NotifyIcon;
             this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
             this.notifyIcon1.Text = "ForceComputerSleep";
             this.notifyIcon1.Visible = true;
             this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
+            // 
+            // contextMenuStrip_NotifyIcon
+            // 
+            this.contextMenuStrip_NotifyIcon.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.exitToolStripMenuItem});
+            this.contextMenuStrip_NotifyIcon.Name = "contextMenuStrip_NotifyIcon";
+            this.contextMenuStrip_NotifyIcon.Size = new System.Drawing.Size(94, 26);
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitToolStripMenuItem.Text = "Exit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.Exit);
             // 
             // Form1
             // 
@@ -106,6 +124,7 @@
             this.Text = "Force Computer To Sleep";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_Delay)).EndInit();
+            this.contextMenuStrip_NotifyIcon.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -118,6 +137,8 @@
         private System.Windows.Forms.NumericUpDown numericUpDown_Delay;
         private System.Windows.Forms.Label label_Delay;
         private System.Windows.Forms.NotifyIcon notifyIcon1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip_NotifyIcon;
+        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
     }
 }
 

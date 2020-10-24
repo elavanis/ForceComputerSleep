@@ -19,9 +19,11 @@ namespace ForceComputerSleep
         private TimeSpan shutDownTime;
         private static DateTime lastInput = DateTime.Now;
         private DateTime lastSleepSent = DateTime.Now;
+        private DateTime lastJoystickCheck = DateTime.Now;
         private TimeSpan timeLeft = new TimeSpan(0, 30, 0);
         private static Timer timerForUIUpdate = new Timer();
         private static Timer timerForRepeatSleep = new Timer();
+        private static bool AllowApplicationExit = false;
 
         private static LowLevelProc _procKeyboard = new LowLevelProc(HookCallback);
         private static LowLevelProc _procMouse = new LowLevelProc(HookCallback);
@@ -52,6 +54,7 @@ namespace ForceComputerSleep
 
         private List<Joystick> BuildJoystickList()
         {
+            lastJoystickCheck = DateTime.Now;
             List<Guid> guids = new List<Guid>();
 
             // Initialize DirectInput
@@ -94,6 +97,12 @@ namespace ForceComputerSleep
         {
             try
             {
+                if (DateTime.Now.Subtract(lastJoystickCheck).TotalMinutes > 30)
+                {
+                    //its been 30 minutes since we last updated joysticks, check to see if a new one has been plugged in
+                    BuildJoystickList();
+                }
+
                 CheckJoysticks();
             }
             catch
@@ -187,7 +196,8 @@ namespace ForceComputerSleep
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (e.CloseReason == CloseReason.UserClosing)
+            if (e.CloseReason == CloseReason.UserClosing
+                && !AllowApplicationExit)
             {
                 Hide();
                 e.Cancel = true;
@@ -197,6 +207,13 @@ namespace ForceComputerSleep
         private void notifyIcon1_DoubleClick(object sender, EventArgs e)
         {
             Show();
+        }
+
+        private void Exit(object sender, EventArgs e)
+        {
+            AllowApplicationExit = true;
+
+            Application.Exit();
         }
     }
 }
