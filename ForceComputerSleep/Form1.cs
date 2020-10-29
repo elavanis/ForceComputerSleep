@@ -34,6 +34,10 @@ namespace ForceComputerSleep
         private const int WM_KEYDOWN = 256;
         private const int WM_MOUSEMOVE = 512;
 
+        //Joysticks leak memory on creation so we will cache each one.
+        //This way we wont won't create more than we need during each build
+        //and we can reuse ones if they are unplugged and plugged back in.
+        Dictionary<Guid, Joystick> joystickDictionary = new Dictionary<Guid, Joystick>();
 
         List<Joystick> joysticks;
 
@@ -72,12 +76,22 @@ namespace ForceComputerSleep
 
             List<Joystick> joysticks = new List<Joystick>();
 
-            foreach (var item in guids)
+            foreach (var guid in guids)
             {
-                Joystick joystick = new Joystick(directInput, item);
-                joystick.Properties.BufferSize = 128;
-                joystick.Acquire();
-                joysticks.Add(joystick);
+                Joystick joystick = null;
+
+                if (joystickDictionary.TryGetValue(guid, out joystick))
+                {
+                    joysticks.Add(joystick);
+                }
+                else
+                {
+                    joystick = new Joystick(directInput, guid);
+                    joystick.Properties.BufferSize = 128;
+                    joystick.Acquire();
+                    joysticks.Add(joystick);
+                    joystickDictionary.Add(guid, joystick);
+                }
             }
 
             return joysticks;
@@ -97,17 +111,17 @@ namespace ForceComputerSleep
         {
             try
             {
-                if (DateTime.Now.Subtract(lastJoystickCheck).TotalMinutes > 30)
+                if (DateTime.Now.Subtract(lastJoystickCheck) > shutDownTime)
                 {
                     //its been 30 minutes since we last updated joysticks, check to see if a new one has been plugged in
-                    BuildJoystickList();
+                    joysticks = BuildJoystickList();
                 }
 
                 CheckJoysticks();
             }
             catch
             {
-                BuildJoystickList();
+                joysticks = BuildJoystickList();
             }
 
             timeLeft = shutDownTime.Subtract(DateTime.Now.Subtract(lastInput));
