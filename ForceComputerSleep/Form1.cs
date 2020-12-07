@@ -165,7 +165,7 @@ namespace ForceComputerSleep
             if (nCode >= 0 && (wParam == (IntPtr)WM_KEYDOWN
                                 || wParam == (IntPtr)WM_MOUSEMOVE))
             {
-                Console.WriteLine((object)(Keys)Marshal.ReadInt32(lParam));
+                //Console.WriteLine((object)(Keys)Marshal.ReadInt32(lParam));
                 lastInput = DateTime.Now;
 
                 if (timerForRepeatSleep.Enabled)
