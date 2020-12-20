@@ -16,14 +16,33 @@ namespace ForceComputerSleep
 {
     public partial class Form1 : Form
     {
-        private TimeSpan shutDownTime;
-        private static DateTime lastInput = DateTime.Now;
+        private TimeSpan sleepTime;
         private DateTime lastSleepSent = DateTime.Now;
         private DateTime lastJoystickCheck = DateTime.Now;
         private TimeSpan timeLeft = new TimeSpan(0, 30, 0);
         private static Timer timerForUIUpdate = new Timer();
         private static Timer timerForRepeatSleep = new Timer();
         private static bool AllowApplicationExit = false;
+
+        private static List<DateTime> sleepTimes = new List<DateTime>();
+        private static DateTime _lastInput = DateTime.Now;
+        private static DateTime lastInput
+        {
+            get
+            {
+                return _lastInput;
+            }
+            set
+            {
+                _lastInput = value;
+
+                lock (sleepTimes)
+                {
+                    sleepTimes.Clear();
+                }
+            }
+        }
+
 
         private static LowLevelProc _procKeyboard = new LowLevelProc(HookCallback);
         private static LowLevelProc _procMouse = new LowLevelProc(HookCallback);
@@ -41,11 +60,13 @@ namespace ForceComputerSleep
 
         List<Joystick> joysticks;
 
+
+
         public Form1()
         {
             InitializeComponent();
 
-            shutDownTime = TimeSpan.Parse(ConfigurationManager.AppSettings["ShutDownTime"]);
+            sleepTime = TimeSpan.Parse(ConfigurationManager.AppSettings["SleepTime"]);
             _hookIDKeyboard = SetHook(_procKeyboard, WH_KEYBOARD_LL);
             _hookIDMouse = SetHook(_procMouse, WH_MOUSE_LL);
 
@@ -99,6 +120,22 @@ namespace ForceComputerSleep
 
         private void RepeatSleep(object sender, EventArgs e)
         {
+            lock (sleepTimes)
+            {
+                if (sleepTimes.Count > 3)
+                {
+                    while (DateTime.Now.Subtract(sleepTimes[0]).TotalMinutes > 30)
+                    {
+                        sleepTimes.RemoveAt(0);
+                    }
+                }
+
+                if (sleepTimes.Count > 3)
+                {
+                    ShutdownComputer();
+                }
+            }
+
             if (DateTime.Now.Minute % 5 == 0
                 && DateTime.Now.Second == 0
                 && DateTime.Now.Subtract(lastSleepSent).TotalMinutes >= 5)
@@ -107,11 +144,12 @@ namespace ForceComputerSleep
             }
         }
 
+
         private void Tick(object sender, EventArgs e)
         {
             try
             {
-                if (DateTime.Now.Subtract(lastJoystickCheck) > shutDownTime)
+                if (DateTime.Now.Subtract(lastJoystickCheck) > sleepTime)
                 {
                     //its been 30 minutes since we last updated joysticks, check to see if a new one has been plugged in
                     joysticks = BuildJoystickList();
@@ -124,12 +162,14 @@ namespace ForceComputerSleep
                 joysticks = BuildJoystickList();
             }
 
-            timeLeft = shutDownTime.Subtract(DateTime.Now.Subtract(lastInput));
+            timeLeft = sleepTime.Subtract(DateTime.Now.Subtract(lastInput));
             timeLeft = timeLeft.Add(TimeSpan.FromMinutes((int)numericUpDown_Delay.Value));
+
             if (timeLeft.TotalSeconds <= 0.0)
             {
                 PutComputerToSleep();
             }
+
             label_CountDownTimer.Text = timeLeft.ToString("hh") + ":" + timeLeft.ToString("mm") + ":" + timeLeft.ToString("ss");
         }
 
@@ -149,10 +189,20 @@ namespace ForceComputerSleep
 
         private void PutComputerToSleep()
         {
+            lock (sleepTimes)
+            {
+                sleepTimes.Add(DateTime.Now);
+            }
+
             lastSleepSent = DateTime.Now;
             timerForUIUpdate.Stop();
             timerForRepeatSleep.Start();
             Application.SetSuspendState(PowerState.Suspend, true, true);
+        }
+
+        private void ShutdownComputer()
+        {
+            Process.Start("shutdown", "/s /t 0");
         }
 
         private void ForceSleep_Click(object sender, EventArgs e)
@@ -181,8 +231,6 @@ namespace ForceComputerSleep
 
             return CallNextHookEx(_hookIDKeyboard, nCode, wParam, lParam);
         }
-
-
 
         private IntPtr SetHook(LowLevelProc proc, int constToWatch)
         {
