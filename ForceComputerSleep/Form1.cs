@@ -17,32 +17,12 @@ namespace ForceComputerSleep
     public partial class Form1 : Form
     {
         private TimeSpan sleepTime;
-        private DateTime lastSleepSent = DateTime.Now;
         private DateTime lastJoystickCheck = DateTime.Now;
         private TimeSpan timeLeft = new TimeSpan(0, 30, 0);
         private static Timer timerForUIUpdate = new Timer();
-        private static Timer timerForRepeatSleep = new Timer();
         private static bool AllowApplicationExit = false;
 
-        private static List<DateTime> sleepTimes = new List<DateTime>();
-        private static DateTime _lastInput = DateTime.Now;
-        private static DateTime lastInput
-        {
-            get
-            {
-                return _lastInput;
-            }
-            set
-            {
-                _lastInput = value;
-
-                lock (sleepTimes)
-                {
-                    sleepTimes.Clear();
-                }
-            }
-        }
-
+        private static DateTime lastInput = DateTime.Now;
 
         private static LowLevelProc _procKeyboard = new LowLevelProc(HookCallback);
         private static LowLevelProc _procMouse = new LowLevelProc(HookCallback);
@@ -73,8 +53,8 @@ namespace ForceComputerSleep
             joysticks = BuildJoystickList();
 
             timerForUIUpdate.Tick += Tick;
+            timerForUIUpdate.Interval = 1000;
             timerForUIUpdate.Start();
-            timerForRepeatSleep.Tick += RepeatSleep;
         }
 
         private List<Joystick> BuildJoystickList()
@@ -120,27 +100,12 @@ namespace ForceComputerSleep
 
         private void RepeatSleep(object sender, EventArgs e)
         {
-            lock (sleepTimes)
-            {
-                if (sleepTimes.Count > 3)
-                {
-                    while (DateTime.Now.Subtract(sleepTimes[0]).TotalMinutes > 30)
-                    {
-                        sleepTimes.RemoveAt(0);
-                    }
-                }
-
-                if (sleepTimes.Count > 3)
-                {
-                    ShutdownComputer();
-                }
-            }
-
+            //add 10 minutes to make sure we had time to sleep and we are now waking up again
             if (DateTime.Now.Minute % 5 == 0
                 && DateTime.Now.Second == 0
-                && DateTime.Now.Subtract(lastSleepSent).TotalMinutes >= 5)
+                && DateTime.Now.Subtract(lastInput.AddMinutes(10)) > sleepTime)
             {
-                PutComputerToSleep();
+                ShutdownComputer();
             }
         }
 
@@ -165,7 +130,16 @@ namespace ForceComputerSleep
             timeLeft = sleepTime.Subtract(DateTime.Now.Subtract(lastInput));
             timeLeft = timeLeft.Add(TimeSpan.FromMinutes((int)numericUpDown_Delay.Value));
 
-            if (timeLeft.TotalSeconds <= 0.0)
+            if (timeLeft.TotalSeconds <= -600)
+            {
+                if (DateTime.Now.Minute % 5 == 0
+                  && DateTime.Now.Second == 0
+                  && DateTime.Now.Subtract(lastInput.AddMinutes(10)) > sleepTime)
+                {
+                    ShutdownComputer();
+                }
+            }
+            else if (timeLeft.TotalSeconds <= 0.0)
             {
                 PutComputerToSleep();
             }
@@ -189,14 +163,6 @@ namespace ForceComputerSleep
 
         private void PutComputerToSleep()
         {
-            lock (sleepTimes)
-            {
-                sleepTimes.Add(DateTime.Now);
-            }
-
-            lastSleepSent = DateTime.Now;
-            timerForUIUpdate.Stop();
-            timerForRepeatSleep.Start();
             Application.SetSuspendState(PowerState.Suspend, true, true);
         }
 
@@ -217,16 +183,6 @@ namespace ForceComputerSleep
             {
                 //Console.WriteLine((object)(Keys)Marshal.ReadInt32(lParam));
                 lastInput = DateTime.Now;
-
-                if (timerForRepeatSleep.Enabled)
-                {
-                    timerForRepeatSleep.Stop();
-                }
-
-                if (!timerForUIUpdate.Enabled)
-                {
-                    timerForUIUpdate.Start();
-                }
             }
 
             return CallNextHookEx(_hookIDKeyboard, nCode, wParam, lParam);
