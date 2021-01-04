@@ -98,18 +98,6 @@ namespace ForceComputerSleep
             return joysticks;
         }
 
-        private void RepeatSleep(object sender, EventArgs e)
-        {
-            //add 10 minutes to make sure we had time to sleep and we are now waking up again
-            if (DateTime.Now.Minute % 5 == 0
-                && DateTime.Now.Second == 0
-                && DateTime.Now.Subtract(lastInput.AddMinutes(10)) > sleepTime)
-            {
-                ShutdownComputer();
-            }
-        }
-
-
         private void Tick(object sender, EventArgs e)
         {
             try
@@ -133,8 +121,7 @@ namespace ForceComputerSleep
             if (timeLeft.TotalSeconds <= -600)
             {
                 if (DateTime.Now.Minute % 5 == 0
-                  && DateTime.Now.Second == 0
-                  && DateTime.Now.Subtract(lastInput.AddMinutes(10)) > sleepTime)
+                  && DateTime.Now.Second == 0)
                 {
                     ShutdownComputer();
                 }
