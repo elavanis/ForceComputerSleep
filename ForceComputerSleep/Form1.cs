@@ -6,6 +6,7 @@ using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -100,6 +101,11 @@ namespace ForceComputerSleep
 
         private void Tick(object sender, EventArgs e)
         {
+            if (DateTime.Now.Second % 10 == 0)
+            {
+                string line = $"{DateTime.Now}\t{lastInput}\t{lastJoystickCheck}";
+            }
+
             try
             {
                 if (DateTime.Now.Subtract(lastJoystickCheck) > sleepTime)
@@ -155,12 +161,13 @@ namespace ForceComputerSleep
 
         private void ShutdownComputer()
         {
-            Process.Start("shutdown", "/s /t 0");
+            Process.Start("shutdown", "/s /f /t 0");
         }
 
         private void ForceSleep_Click(object sender, EventArgs e)
         {
-            PutComputerToSleep();
+            //PutComputerToSleep();
+            ShutdownComputer();
         }
 
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
