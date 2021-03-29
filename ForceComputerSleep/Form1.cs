@@ -20,6 +20,8 @@ namespace ForceComputerSleep
         private TimeSpan sleepTime;
         private DateTime lastJoystickCheck = DateTime.Now;
         private TimeSpan timeLeft = new TimeSpan(0, 30, 0);
+        private bool AllowShutDown = false;
+
         private static Timer timerForUIUpdate = new Timer();
         private static bool AllowApplicationExit = false;
 
@@ -42,12 +44,12 @@ namespace ForceComputerSleep
         List<Joystick> joysticks;
 
 
-
         public Form1()
         {
             InitializeComponent();
 
             sleepTime = TimeSpan.Parse(ConfigurationManager.AppSettings["SleepTime"]);
+            AllowShutDown = bool.Parse(ConfigurationManager.AppSettings["AllowShutDown"]);
             _hookIDKeyboard = SetHook(_procKeyboard, WH_KEYBOARD_LL);
             _hookIDMouse = SetHook(_procMouse, WH_MOUSE_LL);
 
@@ -129,7 +131,14 @@ namespace ForceComputerSleep
                 if (DateTime.Now.Minute % 5 == 0
                   && DateTime.Now.Second == 0)
                 {
-                    ShutdownComputer();
+                    if (AllowShutDown)
+                    {
+                        ShutdownComputer();
+                    }
+                    else
+                    {
+                        PutComputerToSleep();
+                    }
                 }
             }
             else if (timeLeft.TotalSeconds <= 0.0)
@@ -166,8 +175,7 @@ namespace ForceComputerSleep
 
         private void ForceSleep_Click(object sender, EventArgs e)
         {
-            //PutComputerToSleep();
-            ShutdownComputer();
+            PutComputerToSleep();
         }
 
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
