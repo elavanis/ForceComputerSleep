@@ -58,9 +58,9 @@
             this.button_ForceSleep.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.button_ForceSleep.Location = new System.Drawing.Point(12, 12);
             this.button_ForceSleep.Name = "button_ForceSleep";
-            this.button_ForceSleep.Size = new System.Drawing.Size(136, 100);
+            this.button_ForceSleep.Size = new System.Drawing.Size(173, 100);
             this.button_ForceSleep.TabIndex = 1;
-            this.button_ForceSleep.Text = "Sleep\r\nNow";
+            this.button_ForceSleep.Text = "Sleep Now";
             this.button_ForceSleep.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.button_ForceSleep.UseVisualStyleBackColor = true;
             this.button_ForceSleep.Click += new System.EventHandler(this.ForceSleep_Click);
@@ -101,12 +101,12 @@
             this.contextMenuStrip_NotifyIcon.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.exitToolStripMenuItem});
             this.contextMenuStrip_NotifyIcon.Name = "contextMenuStrip_NotifyIcon";
-            this.contextMenuStrip_NotifyIcon.Size = new System.Drawing.Size(94, 26);
+            this.contextMenuStrip_NotifyIcon.Size = new System.Drawing.Size(93, 26);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(93, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(92, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.Exit);
             // 

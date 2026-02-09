@@ -21,6 +21,7 @@ namespace ForceComputerSleep
         private DateTime lastJoystickCheck = DateTime.Now;
         private TimeSpan timeLeft = new TimeSpan(0, 30, 0);
         private bool AllowShutDown = false;
+        private PowerState powerState = PowerState.Suspend;
 
         private static Timer timerForUIUpdate = new Timer();
         private static bool AllowApplicationExit = false;
@@ -58,6 +59,15 @@ namespace ForceComputerSleep
             timerForUIUpdate.Tick += Tick;
             timerForUIUpdate.Interval = 1000;
             timerForUIUpdate.Start();
+
+            powerState = (PowerState)Enum.Parse(typeof(PowerState), ConfigurationManager.AppSettings["SuspendHibernate"], true);
+
+            if (powerState == PowerState.Hibernate)
+            {
+                button_ForceSleep.Image = Properties.Resources.BearSmall;
+                button_ForceSleep.Text = @"Hibernate
+Now";
+            }
         }
 
         private List<Joystick> BuildJoystickList()
@@ -165,7 +175,7 @@ namespace ForceComputerSleep
 
         private void PutComputerToSleep()
         {
-            Application.SetSuspendState(PowerState.Suspend, true, true);
+            Application.SetSuspendState(powerState, true, true);
         }
 
         private void ShutdownComputer()
